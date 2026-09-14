@@ -1,0 +1,11 @@
+id,emergency_type,location,latitude,longitude,patient_count,description,priority,status
+1,Road Accident,Tambaram,12.925,80.11,2,"Two injured, one unconscious",High,Resolved
+2,Medical Emergency,Velachery,12.98,80.215,1,Severe breathing difficulty,High,Resolved
+3,Road Accident,Guindy,13.006,80.22,3,Multiple injuries after collision,Critical,Resolved
+4,Cardiac Emergency,Adyar,13.006,80.258,1,Chest pain and suspected cardiac event,Critical,Resolved
+5,Road Accident,Pallavaram,12.968,80.15,2,Two patients with suspected fractures,High,Resolved
+6,Medical Emergency,T Nagar,13.0418,80.2341,1,Patient collapsed suddenly,Critical,Resolved
+7,Road Accident,Porur,13.038,80.1565,4,Multi-vehicle accident,Critical,Resolved
+8,Medical Emergency,Anna Nagar,13.085,80.2101,1,Unconscious patient,Critical,Resolved
+9,Road Accident,Sholinganallur,12.901,80.2279,2,Minor and moderate injuries,Medium,Resolved
+10,Cardiac Emergency,Perungudi,12.9601,80.2417,1,Severe chest pain,High,Resolved

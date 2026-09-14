@@ -1,0 +1,21 @@
+id,vehicle_number,location,latitude,longitude,status,ambulance_type,equipment
+1,TN01AB1001,Tambaram,12.9249,80.1,Available,Advanced,"Advanced, Ventilator"
+2,TN01AB1002,Chromepet,12.9516,80.1462,Available,Basic,Basic
+3,TN01AB1003,Guindy,13.0067,80.2206,Busy,Advanced,"Advanced, Cardiac Monitor"
+4,TN01AB1004,Velachery,12.9815,80.218,Available,Basic,Basic
+5,TN01AB1005,Adyar,13.0063,80.2574,Available,Advanced,"Advanced, Cardiac Monitor"
+6,TN01AB1006,Pallavaram,12.9675,80.1497,Available,Advanced,"Advanced, Ventilator"
+7,TN01AB1007,T Nagar,13.0418,80.2341,Busy,Basic,Basic
+8,TN01AB1008,Porur,13.038,80.1565,Available,Advanced,"Advanced, Ventilator"
+9,TN01AB1009,Anna Nagar,13.085,80.2101,Available,Basic,Basic
+10,TN01AB1010,Perungudi,12.9601,80.2417,Available,Advanced,"Advanced, Cardiac Monitor"
+11,TN01AB1011,Sholinganallur,12.901,80.2279,Available,Advanced,"Advanced, Ventilator"
+12,TN01AB1012,Medavakkam,12.9172,80.1927,Busy,Advanced,"Advanced, Ventilator"
+13,TN01AB1013,OMR,12.9165,80.23,Available,Basic,Basic
+14,TN01AB1014,Chengalpattu,12.6811,79.9888,Available,Advanced,"Advanced, Ventilator"
+15,TN01AB1015,Taramani,12.9784,80.243,Available,Basic,Basic
+16,TN01AB1016,Saidapet,13.0213,80.2231,Available,Advanced,"Advanced, Cardiac Monitor"
+17,TN01AB1017,Mylapore,13.0339,80.2676,Busy,Basic,Basic
+18,TN01AB1018,Nungambakkam,13.0569,80.2425,Available,Advanced,"Advanced, Ventilator"
+19,TN01AB1019,Madipakkam,12.9623,80.1986,Available,Basic,Basic
+20,TN01AB1020,Kelambakkam,12.789,80.22,Available,Advanced,"Advanced, Ventilator"
