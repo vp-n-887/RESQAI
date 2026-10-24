@@ -4,6 +4,8 @@ require("dotenv").config();
 
 const emergencyRoutes = require("./routes/emergencyRoutes");
 const dashboardRoutes = require("./routes/dashboardRoutes");
+const ambulanceRoutes = require("./routes/ambulanceRoutes");
+const hospitalRoutes = require("./routes/hospitalRoutes");
 
 const app = express();
 
@@ -17,9 +19,11 @@ app.get("/", (req, res) => {
 });
 
 app.use("/api/emergencies", emergencyRoutes);
+app.use("/api/ambulances", ambulanceRoutes);
+app.use("/api/hospitals", hospitalRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 
-const PORT = 5000;
+const PORT = Number(process.env.PORT) || 5000;
 
 app.listen(PORT, () => {
     console.log(`🚑 RESQAI Backend running on port ${PORT}`);

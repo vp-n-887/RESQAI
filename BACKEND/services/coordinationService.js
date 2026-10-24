@@ -1,20 +1,16 @@
-const pool = require("../db/database");
 const { findBestAmbulance } = require("./ambulanceService");
 const { findBestHospital } = require("./hospitalService");
 
-async function coordinateEmergency(emergency) {
+async function coordinateEmergency(emergency, client) {
 
-    console.log("🚨 Coordinating emergency...");
+    if (!client) {
+        throw new Error("A transaction client is required for emergency coordination");
+    }
 
-    const ambulance = await findBestAmbulance(emergency);
+    const ambulance = await findBestAmbulance(emergency, client);
+    const hospital = await findBestHospital(emergency, client);
 
-    console.log(`🚑 Ambulance selected: ${ambulance.vehicle_number}`);
-
-    const hospital = await findBestHospital(emergency);
-
-    console.log(`🏥 Hospital selected: ${hospital.name}`);
-
-    const assignmentResult = await pool.query(
+    const assignmentResult = await client.query(
         `
         INSERT INTO assignments
         (emergency_id, ambulance_id, hospital_id, ambulance_eta, hospital_eta, status)
@@ -31,14 +27,25 @@ async function coordinateEmergency(emergency) {
         ]
     );
 
-    await pool.query(
+    if (assignmentResult.rowCount !== 1) {
+        throw new Error("Emergency assignment could not be created");
+    }
+
+    const ambulanceResult = await client.query(
         `
         UPDATE ambulances
         SET status = 'Busy'
-        WHERE id = $1
+        WHERE id = $1 AND status = 'Available'
+        RETURNING id
         `,
         [ambulance.id]
     );
+
+    if (ambulanceResult.rowCount !== 1) {
+        const error = new Error("Ambulance availability changed during reservation");
+        error.code = "AMBULANCE_RESERVATION_LOST";
+        throw error;
+    }
 
     return {
         emergency,
