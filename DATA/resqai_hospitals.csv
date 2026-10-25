@@ -1,0 +1,16 @@
+id,name,location,latitude,longitude,trauma_care,icu_available,available_beds,specialties,status
+1,ABC Hospital,Tambaram,12.9249,80.127,Yes,Yes,5,"Trauma, General",Available
+2,XYZ Hospital,Chromepet,12.9516,80.1462,No,Yes,3,"General, Cardiology",Available
+3,Apollo Hospital,Greams Road,13.0569,80.2425,Yes,Yes,8,"Trauma, Cardiology, Neurology",Available
+4,City Hospital,Velachery,12.975,80.22,Yes,No,4,"Trauma, General",Available
+5,Sri Ramachandra Hospital,Porur,13.038,80.1565,Yes,Yes,10,"Trauma, Cardiology, Neurology",Available
+6,Global Health City,Perumbakkam,12.8996,80.2024,Yes,Yes,12,"Trauma, Cardiology, Neurology",Available
+7,Fortis Malar Hospital,Adyar,13.0063,80.2574,Yes,Yes,6,"Trauma, Cardiology",Available
+8,MIOT International,Manapakkam,13.0178,80.1686,Yes,Yes,9,"Trauma, Cardiology, Orthopedics",Available
+9,Government General Hospital,Park Town,13.0789,80.275,Yes,Yes,15,"Trauma, General, Neurology",Available
+10,Billroth Hospital,Shenoy Nagar,13.0781,80.2247,No,Yes,5,"Cardiology, General",Available
+11,Kauvery Hospital,Alwarpet,13.0336,80.2552,Yes,Yes,7,"Trauma, Cardiology",Available
+12,SRM Hospital,Kattankulathur,12.8236,80.045,Yes,Yes,10,"Trauma, General, Cardiology",Available
+13,Chettinad Hospital,Kelambakkam,12.789,80.22,Yes,Yes,8,"Trauma, Cardiology, Neurology",Available
+14,Vijaya Hospital,Vadapalani,13.05,80.212,Yes,Yes,4,"Trauma, General",Full
+15,Apollo Hospitals OMR,OMR,12.93,80.23,Yes,Yes,6,"Trauma, Cardiology",Available
