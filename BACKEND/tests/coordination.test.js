@@ -260,6 +260,19 @@ test("no suitable hospital rolls back without creating an assignment", async () 
     assert.equal(fake.releaseCalls.length, 1);
 });
 
+test("database connection timeout returns a retryable error without exposing connection details", async () => {
+    const response = await postEmergency({
+        async connect() {
+            throw new Error("Connection terminated due to connection timeout: private host");
+        }
+    });
+
+    assert.equal(response.status, 503);
+    assert.equal(response.body.code, "DATABASE_UNAVAILABLE");
+    assert.match(response.body.error, /temporarily unavailable/);
+    assert.doesNotMatch(JSON.stringify(response.body), /private host|connection timeout/i);
+});
+
 test("assignment insert failure rolls back and does not expose SQL details", async () => {
     const fake = createFakePool({ assignmentFailure: true });
     const response = await postEmergency(fake.pool);
@@ -426,5 +439,7 @@ test("Supabase connection settings enforce SSL without printing credentials", ()
     assert.equal(typeof config.ssl, "object");
     assert.equal(config.ssl.rejectUnauthorized, true);
     assert.equal(config.max, 7);
+    assert.equal(config.keepAlive, true);
+    assert.equal(config.keepAliveInitialDelayMillis, 10000);
     assert.equal(config.connectionString.includes("encoded%40password"), true);
 });

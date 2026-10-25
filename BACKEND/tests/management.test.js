@@ -17,6 +17,8 @@ const {
 } = require("../services/hospitalService");
 const { createAmbulanceRouter } = require("../routes/ambulanceRoutes");
 const { createHospitalRouter } = require("../routes/hospitalRoutes");
+const { createDashboardRouter } = require("../routes/dashboardRoutes");
+const { createEmergencyRouter } = require("../routes/emergencyRoutes");
 
 async function requestJson(router, path, options = {}) {
     const app = express();
@@ -37,6 +39,128 @@ async function requestJson(router, path, options = {}) {
         );
     }
 }
+
+test("dashboard statistics use one aggregate query and preserve the API response shape", async () => {
+    let queryCount = 0;
+    let queryText;
+    const router = createDashboardRouter({
+        database: {
+            async query(sql) {
+                queryCount += 1;
+                queryText = sql;
+                return {
+                    rows: [{
+                        ambulance_total: "4",
+                        ambulance_available: "3",
+                        ambulance_busy: "1",
+                        hospital_total: "2",
+                        hospital_available: "1",
+                        hospital_full: "1",
+                        emergency_total: "5",
+                        emergency_active: "2"
+                    }]
+                };
+            }
+        }
+    });
+
+    const response = await requestJson(router, "/stats");
+
+    assert.equal(response.status, 200);
+    assert.equal(queryCount, 1);
+    assert.match(queryText, /COUNT\(\*\) FILTER \(WHERE status = 'Available'\)/);
+    assert.match(queryText, /COUNT\(\*\) FILTER \(WHERE status = 'Active'\)/);
+    assert.deepEqual(response.body, {
+        ambulances: { total: "4", available: "3", busy: "1" },
+        hospitals: { total: "2", available: "1", full: "1" },
+        emergencies: { total: "5", active: "2" }
+    });
+});
+
+test("dashboard statistics return zero counts for empty tables", async () => {
+    const router = createDashboardRouter({
+        database: {
+            async query() {
+                return {
+                    rows: [{
+                        ambulance_total: "0",
+                        ambulance_available: "0",
+                        ambulance_busy: "0",
+                        hospital_total: "0",
+                        hospital_available: "0",
+                        hospital_full: "0",
+                        emergency_total: "0",
+                        emergency_active: "0"
+                    }]
+                };
+            }
+        }
+    });
+
+    const response = await requestJson(router, "/stats");
+
+    assert.equal(response.status, 200);
+    assert.equal(response.body.ambulances.total, "0");
+    assert.equal(response.body.hospitals.available, "0");
+    assert.equal(response.body.emergencies.active, "0");
+});
+
+test("dashboard reports database connectivity failures without leaking details", async () => {
+    const router = createDashboardRouter({
+        database: {
+            async query() {
+                throw new Error("Connection terminated due to connection timeout: private host");
+            }
+        }
+    });
+
+    const response = await requestJson(router, "/stats");
+
+    assert.equal(response.status, 503);
+    assert.equal(response.body.code, "DATABASE_UNAVAILABLE");
+    assert.match(response.body.error, /temporarily unavailable/);
+    assert.doesNotMatch(JSON.stringify(response.body), /private host|connection timeout/i);
+});
+
+test("database connection failures are retryable across list and update routes", async () => {
+    const unavailable = async () => {
+        throw new Error("Connection terminated due to connection timeout");
+    };
+    const emergencyResponse = await requestJson(
+        createEmergencyRouter({ list: unavailable }),
+        "/"
+    );
+    const ambulanceRouter = createAmbulanceRouter({
+        list: unavailable,
+        update: unavailable
+    });
+    const ambulanceListResponse = await requestJson(ambulanceRouter, "/");
+    const ambulanceUpdateResponse = await requestJson(ambulanceRouter, "/1", {
+        method: "PATCH",
+        body: { location: "Guindy" }
+    });
+    const hospitalRouter = createHospitalRouter({
+        list: unavailable,
+        update: unavailable
+    });
+    const hospitalListResponse = await requestJson(hospitalRouter, "/");
+    const hospitalUpdateResponse = await requestJson(hospitalRouter, "/1", {
+        method: "PATCH",
+        body: { name: "City Hospital" }
+    });
+
+    for (const response of [
+        emergencyResponse,
+        ambulanceListResponse,
+        ambulanceUpdateResponse,
+        hospitalListResponse,
+        hospitalUpdateResponse
+    ]) {
+        assert.equal(response.status, 503);
+        assert.equal(response.body.code, "DATABASE_UNAVAILABLE");
+        assert.match(response.body.error, /temporarily unavailable/);
+    }
+});
 
 test("emergency list joins real assignment details and represents unassigned resources as null", async () => {
     let queryText;

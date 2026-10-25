@@ -3,6 +3,10 @@ const {
     listHospitals,
     updateHospital
 } = require("../services/hospitalService");
+const {
+    getDatabaseDiagnosticCode,
+    isDatabaseConnectionError
+} = require("../services/databaseError");
 
 function createHospitalRouter({
     list = listHospitals,
@@ -15,10 +19,18 @@ function createHospitalRouter({
             const records = await list();
             return res.json({ data: records });
         } catch (error) {
-            console.error("Hospital list failed:", error.code || "INTERNAL_ERROR");
-            return res.status(500).json({
-                error: "Failed to retrieve hospitals.",
-                code: "HOSPITAL_LIST_FAILED"
+            const unavailable = isDatabaseConnectionError(error);
+            const code = unavailable ? "DATABASE_UNAVAILABLE" : "HOSPITAL_LIST_FAILED";
+            console.error(
+                "Hospital list failed:",
+                code,
+                getDatabaseDiagnosticCode(error)
+            );
+            return res.status(unavailable ? 503 : 500).json({
+                error: unavailable
+                    ? "Database is temporarily unavailable. Please retry."
+                    : "Failed to retrieve hospitals.",
+                code
             });
         }
     });
@@ -28,11 +40,21 @@ function createHospitalRouter({
             const record = await update(req.params.id, req.body);
             return res.json({ data: record });
         } catch (error) {
-            const status = error.status || 500;
-            console.error("Hospital update failed:", error.code || "INTERNAL_ERROR");
+            const unavailable = isDatabaseConnectionError(error);
+            const status = unavailable ? 503 : error.status || 500;
+            const code = unavailable
+                ? "DATABASE_UNAVAILABLE"
+                : error.code || "HOSPITAL_UPDATE_FAILED";
+            console.error(
+                "Hospital update failed:",
+                code,
+                getDatabaseDiagnosticCode(error)
+            );
             return res.status(status).json({
-                error: status === 500 ? "Failed to update hospital." : error.message,
-                code: error.code || "HOSPITAL_UPDATE_FAILED"
+                error: unavailable
+                    ? "Database is temporarily unavailable. Please retry."
+                    : status === 500 ? "Failed to update hospital." : error.message,
+                code
             });
         }
     });

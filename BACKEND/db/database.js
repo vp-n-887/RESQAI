@@ -3,6 +3,10 @@ const path = require("node:path");
 const fs = require("node:fs");
 const { Pool } = require("pg");
 const dotenv = require("dotenv");
+const {
+    getDatabaseDiagnosticCode,
+    isDatabaseConnectionError
+} = require("../services/databaseError");
 
 dotenv.config({
     path: path.resolve(__dirname, "..", ".env"),
@@ -23,7 +27,9 @@ function createPoolConfig(env = process.env) {
         max: Number(env.DB_POOL_MAX) || 10,
         idleTimeoutMillis: Number(env.DB_IDLE_TIMEOUT_MS) || 30000,
         connectionTimeoutMillis:
-            Number(env.DB_CONNECTION_TIMEOUT_MS) || 10000
+            Number(env.DB_CONNECTION_TIMEOUT_MS) || 10000,
+        keepAlive: true,
+        keepAliveInitialDelayMillis: 10000
     };
 
     const isSupabase = (host) =>
@@ -92,7 +98,10 @@ const pool = new Pool(createPoolConfig());
 pool.on("error", (error) => {
     console.error(
         "Unexpected PostgreSQL pool error:",
-        error.code || "UNKNOWN"
+        isDatabaseConnectionError(error)
+            ? "DATABASE_UNAVAILABLE"
+            : "DATABASE_ERROR",
+        getDatabaseDiagnosticCode(error)
     );
 });
 

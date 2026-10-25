@@ -3,6 +3,10 @@ const {
     listAmbulances,
     updateAmbulance
 } = require("../services/ambulanceService");
+const {
+    getDatabaseDiagnosticCode,
+    isDatabaseConnectionError
+} = require("../services/databaseError");
 
 function createAmbulanceRouter({
     list = listAmbulances,
@@ -15,10 +19,18 @@ function createAmbulanceRouter({
             const records = await list();
             return res.json({ data: records });
         } catch (error) {
-            console.error("Ambulance list failed:", error.code || "INTERNAL_ERROR");
-            return res.status(500).json({
-                error: "Failed to retrieve ambulances.",
-                code: "AMBULANCE_LIST_FAILED"
+            const unavailable = isDatabaseConnectionError(error);
+            const code = unavailable ? "DATABASE_UNAVAILABLE" : "AMBULANCE_LIST_FAILED";
+            console.error(
+                "Ambulance list failed:",
+                code,
+                getDatabaseDiagnosticCode(error)
+            );
+            return res.status(unavailable ? 503 : 500).json({
+                error: unavailable
+                    ? "Database is temporarily unavailable. Please retry."
+                    : "Failed to retrieve ambulances.",
+                code
             });
         }
     });
@@ -28,11 +40,21 @@ function createAmbulanceRouter({
             const record = await update(req.params.id, req.body);
             return res.json({ data: record });
         } catch (error) {
-            const status = error.status || 500;
-            console.error("Ambulance update failed:", error.code || "INTERNAL_ERROR");
+            const unavailable = isDatabaseConnectionError(error);
+            const status = unavailable ? 503 : error.status || 500;
+            const code = unavailable
+                ? "DATABASE_UNAVAILABLE"
+                : error.code || "AMBULANCE_UPDATE_FAILED";
+            console.error(
+                "Ambulance update failed:",
+                code,
+                getDatabaseDiagnosticCode(error)
+            );
             return res.status(status).json({
-                error: status === 500 ? "Failed to update ambulance." : error.message,
-                code: error.code || "AMBULANCE_UPDATE_FAILED"
+                error: unavailable
+                    ? "Database is temporarily unavailable. Please retry."
+                    : status === 500 ? "Failed to update ambulance." : error.message,
+                code
             });
         }
     });

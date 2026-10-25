@@ -24,10 +24,21 @@ async function testConnection() {
         console.log("PostgreSQL connection and dashboard queries verified.");
         console.log("Database time:", result.rows[0].database_time);
     } catch (error) {
-        console.error(
-            "Database configuration, connection, or dashboard query failed:",
-            error.code || "CHECK_BACKEND_ENV_CONFIGURATION"
-        );
+        const {
+            getDatabaseDiagnosticCode,
+            isDatabaseConnectionError
+        } = require("./services/databaseError");
+        if (isDatabaseConnectionError(error)) {
+            console.error(
+                "PostgreSQL is unreachable or timed out. Verify database network access, endpoint/port, and SSL configuration.",
+                getDatabaseDiagnosticCode(error)
+            );
+        } else {
+            console.error(
+                "Database configuration or query failed:",
+                getDatabaseDiagnosticCode(error)
+            );
+        }
         process.exitCode = 1;
     } finally {
         if (pool) {

@@ -2,6 +2,10 @@ const express = require("express");
 const pool = require("../db/database");
 const { coordinateEmergency } = require("../services/coordinationService");
 const { listEmergencies, parseEmergencyListQuery } = require("../services/emergencyService");
+const {
+    getDatabaseDiagnosticCode,
+    isDatabaseConnectionError
+} = require("../services/databaseError");
 
 function createEmergencyRouter({
     database = pool,
@@ -16,12 +20,22 @@ function createEmergencyRouter({
             const records = await list(filters, database);
             return res.json({ data: records });
         } catch (error) {
-            console.error("Emergency list failed:", error.code || "INTERNAL_ERROR");
-            return res.status(error.status || 500).json({
-                error: error.message && error.status
-                    ? error.message
-                    : "Failed to retrieve emergencies.",
-                code: error.code || "EMERGENCY_LIST_FAILED"
+            const unavailable = isDatabaseConnectionError(error);
+            const code = unavailable
+                ? "DATABASE_UNAVAILABLE"
+                : error.code || "EMERGENCY_LIST_FAILED";
+            console.error(
+                "Emergency list failed:",
+                code,
+                getDatabaseDiagnosticCode(error)
+            );
+            return res.status(unavailable ? 503 : error.status || 500).json({
+                error: unavailable
+                    ? "Database is temporarily unavailable. Please retry."
+                    : error.message && error.status
+                        ? error.message
+                        : "Failed to retrieve emergencies.",
+                code
             });
         }
     });
@@ -133,16 +147,30 @@ function createEmergencyRouter({
                 status: 500,
                 message: "Failed to coordinate emergency. Please try again."
             };
+            const unavailable = isDatabaseConnectionError(error);
+            const status = unavailable ? 503 : failure.status;
+            const message = unavailable
+                ? "Database is temporarily unavailable. Please retry."
+                : failure.message;
+            if (unavailable) {
+                if (!clientReleaseError) {
+                    clientReleaseError = error;
+                }
+            }
 
             console.error(
                 "Emergency coordination failed:",
-                error.code || "INTERNAL_ERROR"
+                unavailable ? "DATABASE_UNAVAILABLE" : "COORDINATION_FAILED",
+                getDatabaseDiagnosticCode(error)
             );
             response = {
-                status: failure.status,
+                status,
                 body: {
-                    error: failure.message,
-                    details: failure.message
+                    error: message,
+                    details: message,
+                    code: unavailable
+                        ? "DATABASE_UNAVAILABLE"
+                        : error.code || "COORDINATION_FAILED"
                 }
             };
         } finally {
