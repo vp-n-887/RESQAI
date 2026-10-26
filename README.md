@@ -3,6 +3,8 @@ Smart Emergency Response Network
 RESQAI is a web-based prototype that helps demonstrate emergency coordination by selecting an available ambulance and a suitable hospital, then recording the assignment.
 Note: RESQAI is a project prototype for demonstration, not a replacement for professional emergency dispatch or medical services. It does not provide live GPS tracking, live traffic-based ETAs, sign-in, or staff authorization.
 
+local host link:http://localhost:5173/
+
 Features
 - Dashboard with ambulance, hospital, and emergency counts
 - Submit an emergency and attempt automatic coordination
